@@ -1,0 +1,65 @@
+/* src/index.css */
+:root {
+  --primary-color: #6c5ce7;
+  --secondary-color: #0b1220;
+  --bg-color: #060a14;
+  --white: #ffffff;
+  --text-color: rgba(255, 255, 255, 0.92);
+  --muted-text: rgba(255, 255, 255, 0.64);
+  --danger: #ff4d6d;
+  --success: #2ee59d;
+  --warning: #ffd166;
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  --shadow-hover: 0 26px 60px rgba(0, 0, 0, 0.5);
+  --border-radius: 18px;
+
+  --gradient-app: radial-gradient(1200px 700px at 15% 10%, rgba(108, 92, 231, 0.55), rgba(108, 92, 231, 0) 60%),
+    radial-gradient(900px 620px at 80% 15%, rgba(46, 229, 157, 0.32), rgba(46, 229, 157, 0) 55%),
+    radial-gradient(700px 520px at 70% 85%, rgba(255, 209, 102, 0.22), rgba(255, 209, 102, 0) 55%),
+    linear-gradient(135deg, #050711 0%, #0b1630 55%, #0b1220 100%);
+  --gradient-brand: linear-gradient(135deg, #6c5ce7 0%, #00d2ff 50%, #2ee59d 100%);
+
+  --gradient-danger: linear-gradient(135deg, rgba(255, 77, 109, 1) 0%, rgba(255, 77, 109, 0.55) 55%, rgba(255, 209, 102, 0.65) 100%);
+  --gradient-card: linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06));
+  --surface: rgba(255, 255, 255, 0.1);
+  --surface-strong: rgba(255, 255, 255, 0.14);
+  --border: rgba(255, 255, 255, 0.12);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+body {
+  background: var(--gradient-app);
+  color: var(--text-color);
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(800px 420px at 35% 50%, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 60%) radial-gradient(520px 320px at 85% 65%, rgba(0, 210, 255, 0.08), rgba(0, 210, 255, 0) 55%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* App layout (thay cho flex ở body cũ) */
+.app-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+  position: relative;
+}

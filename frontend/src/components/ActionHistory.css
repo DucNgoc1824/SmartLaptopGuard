@@ -1,0 +1,33 @@
+/* src/components/ActionHistory.css */
+@import './SensorData.css';
+/* Kế thừa luôn CSS của bảng bên kia cho lẹ */
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    text-align: center;
+    min-width: 80px;
+}
+
+.status-success {
+    background: rgba(46, 229, 157, 0.14);
+    color: rgba(46, 229, 157, 0.95);
+    border: 1px solid rgba(46, 229, 157, 0.3);
+}
+
+.status-failed {
+    background: rgba(255, 77, 109, 0.14);
+    color: rgba(255, 77, 109, 0.95);
+    border: 1px solid rgba(255, 77, 109, 0.3);
+}
+
+.status-loading {
+    background: rgba(255, 209, 102, 0.14);
+    color: rgba(255, 209, 102, 0.95);
+    border: 1px solid rgba(255, 209, 102, 0.3);
+}
