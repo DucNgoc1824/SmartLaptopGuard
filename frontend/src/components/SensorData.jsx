@@ -132,6 +132,16 @@ const SensorData = () => {
         );
     };
 
+    // Hàm ánh xạ màu Cảm biến đồng bộ với Nút điều khiển
+    const getValueColor = (sensorName) => {
+        const name = (sensorName || '').toLowerCase();
+        if (name.includes('dist')) return '#ff4d6d';   // Đỏ (Map với Còi báo gù)
+        if (name.includes('humid')) return '#2ee59d';  // Xanh lá (Map với Máy hút ẩm)
+        if (name.includes('temp')) return '#00d2ff';   // Xanh dương (Map với Quạt tản nhiệt)
+        if (name.includes('light')) return '#ffd166';  // Vàng (Map với Đèn RGB)
+        return '#ffffff';
+    };
+
     return (
         <div className="table-page">
             <h2><i className="fa-solid fa-database"></i> Sensor Data History</h2>
@@ -192,7 +202,7 @@ const SensorData = () => {
                                 <tr key={index}>
                                     <td>{(page - 1) * 10 + index + 1}</td>
                                     <td>{item.sensorName}</td>
-                                    <td style={{ fontWeight: 'bold', color: '#00d2ff' }}>
+                                    <td style={{ fontWeight: 'bold', color: getValueColor(item.sensorName) }}>
                                         {formatValueWithUnit(item.value, item.sensorName)}
                                     </td>
                                     <td>{formatDate(item.time)}</td>

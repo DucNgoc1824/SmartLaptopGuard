@@ -122,6 +122,16 @@ const ActionHistory = () => {
         );
     };
 
+    // Hàm ánh xạ màu Thiết bị đồng bộ với Nút điều khiển
+    const getValueColor = (deviceName) => {
+        const name = (deviceName || '').toLowerCase();
+        if (name.includes('posture') || name.includes('dist')) return '#ff4d6d';   // Đỏ
+        if (name.includes('dehumidifier') || name.includes('humid')) return '#2ee59d';  // Xanh lá
+        if (name.includes('fan') || name.includes('temp')) return '#00d2ff';   // Xanh dương
+        if (name.includes('light')) return '#ffd166';  // Vàng
+        return '#ffffff';
+    };
+
     return (
         <div className="table-page">
             <h2><i className="fa-solid fa-clock-rotate-left"></i> Action History</h2>
@@ -175,7 +185,7 @@ const ActionHistory = () => {
                             history.map((item, index) => (
                                 <tr key={index}>
                                     <td>{(page - 1) * 10 + index + 1}</td>
-                                    <td>{item.deviceName}</td>
+                                    <td style={{ fontWeight: 'bold', color: getValueColor(item.deviceName) }}>{item.deviceName}</td>
                                     <td style={{ fontWeight: 'bold' }}>{item.actionName}</td>
                                     <td>
                                         <span className={`status-badge ${getStatusClass(item.actionStatus)}`}>
