@@ -77,7 +77,7 @@ select.input-field {
     background-repeat: no-repeat;
     background-position: right 15px center;
     background-size: 16px;
-    padding-right: 40px; /* Đẩy chữ không bị đè vào mũi tên */
+    padding-right: 40px;
 }
 
 .btn-group {

@@ -56,28 +56,28 @@ const Profile = () => {
             <div>
                 <div className="section-title">Resources & Source Code</div>
                 <div className="resource-grid">
-                    <a href="#" className="resource-card card-pdf">
+                    <a href="#" target='blank' className="resource-card card-pdf">
                         <div className="res-icon"><i className="fa-solid fa-file-pdf"></i></div>
                         <div className="res-content">
                             <h3>Project Report</h3>
                             <p>Download full PDF report</p>
                         </div>
                     </a>
-                    <a href="https://github.com" target="_blank" rel="noreferrer" className="resource-card card-git">
+                    <a href="https://github.com/DucNgoc1824/SmartLaptopGuard.git" target="_blank" rel="noreferrer" className="resource-card card-git">
                         <div className="res-icon"><i className="fa-brands fa-github"></i></div>
                         <div className="res-content">
                             <h3>Source Code</h3>
                             <p>Github Repository</p>
                         </div>
                     </a>
-                    <a href="#" className="resource-card card-api">
+                    <a href="https://documenter.getpostman.com/view/53208975/2sBXigMYmn" target='blank' className="resource-card card-api">
                         <div className="res-icon"><i className="fa-solid fa-code"></i></div>
                         <div className="res-content">
                             <h3>API Docs</h3>
                             <p>Swagger / Postman Collection</p>
                         </div>
                     </a>
-                    <a href="#" className="resource-card card-fig">
+                    <a href="https://www.figma.com/design/iQo95PisiYfqy754Qrc2lJ/Smart-Cooling-Stand?node-id=0-1&t=J1AyvcXlQYhMzgdf-1" target='blank' className="resource-card card-fig">
                         <div className="res-icon"><i className="fa-brands fa-figma"></i></div>
                         <div className="res-content">
                             <h3>UI Design</h3>
