@@ -1,0 +1,11 @@
+# Bỏ qua thư viện thư viện
+node_modules/
+smartlaptop-frontend/node_modules/
+
+# Bỏ qua các file môi trường (chứa pass database, mqtt)
+.env
+
+# Bỏ qua log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

@@ -29,11 +29,11 @@ client.on('message', async (topic, message) => {
         // 2. Nếu là phản hồi Trạng thái lệnh từ ESP32
         if (topic === 'smartlaptop/status') {
             console.log(`[MQTT Status] ESP32 phản hồi:`, data);
-            // Cập nhật trạng thái SUCCESS hoặc FAILED vào Database dựa theo ID thiết bị mới nhất
-            // (Trong thực tế nên truyền kèm actionId để update chính xác nhất)
+            // Sửa lại ORDER BY ID DESC cho chuẩn xác
             await db.query(
                 `UPDATE Actions SET actionStatus = ? 
-                 WHERE deviceID = ? ORDER BY time DESC LIMIT 1`,
+                 WHERE deviceID = ? AND actionStatus = 'LOADING' 
+                 ORDER BY ID DESC LIMIT 1`,
                 [data.status, data.deviceId]
             );
         }

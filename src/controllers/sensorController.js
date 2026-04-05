@@ -3,14 +3,12 @@ const db = require('../config/db');
 // 1. API Lấy dữ liệu cảm biến (Frontend sẽ gọi để vẽ biểu đồ)
 const getSensorData = async (req, res) => {
     try {
-        // 1. Nhận các tham số từ Frontend gửi lên (nếu không có thì dùng mặc định)
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
 
-        const { sensorType, startDate, endDate, sort } = req.query;
+        const { sensorType, exactValue, exactTime, sort } = req.query;
 
-        // 2. Xây dựng câu lệnh SQL động
         let baseQuery = `
             FROM DataSensor 
             JOIN Sensors ON DataSensor.idSensor = Sensors.ID 
@@ -18,55 +16,56 @@ const getSensorData = async (req, res) => {
         `;
         let queryParams = [];
 
-        // Lọc theo loại cảm biến
+        // 1. Lọc theo Loại cảm biến
         if (sensorType) {
             baseQuery += ` AND Sensors.sensorName LIKE ?`;
             queryParams.push(`%${sensorType}%`);
         }
 
-        // Lọc theo thời gian (Từ ngày giờ... Đến ngày giờ...)
-        if (startDate) {
-            baseQuery += ` AND DataSensor.time >= ?`;
-            queryParams.push(startDate);
-        }
-        if (endDate) {
-            baseQuery += ` AND DataSensor.time <= ?`;
-            queryParams.push(endDate);
+        // 2. Lọc chính xác theo Giá trị (Ví dụ: 40, 150)
+        if (exactValue) {
+            baseQuery += ` AND DataSensor.value = ?`;
+            queryParams.push(exactValue);
         }
 
-        // 3. Đếm tổng số dòng (để Frontend tính ra tổng số Trang)
+        // 3. Lọc chính xác theo Thời gian (yyyy/mm/dd hh:mm:ss)
+        if (exactTime) {
+            // Chuyển dấu "/" thành "-" để khớp định dạng datetime của MySQL
+            const dbTime = exactTime.replace(/\//g, '-');
+            baseQuery += ` AND DataSensor.time LIKE ?`;
+            queryParams.push(`${dbTime}%`);
+        }
+
+        // Đếm tổng số dòng để phân trang
         const countQuery = `SELECT COUNT(*) as total ${baseQuery}`;
         const [[countResult]] = await db.query(countQuery, queryParams);
         const totalRecords = countResult.total;
-        const totalPages = Math.ceil(totalRecords / limit);
+        const totalPages = Math.ceil(totalRecords / limit) || 1;
 
-        // 4. Lấy dữ liệu thực tế cho Trang hiện tại
-        let orderClause = (sort === 'oldest') ? 'ASC' : 'DESC';
+        // 4. Bốn chế độ sắp xếp
+        let orderClause = 'ORDER BY DataSensor.time DESC'; // Mặc định: Mới nhất
+        if (sort === 'time-asc') orderClause = 'ORDER BY DataSensor.time ASC';
+        if (sort === 'value-desc') orderClause = 'ORDER BY DataSensor.value DESC';
+        if (sort === 'value-asc') orderClause = 'ORDER BY DataSensor.value ASC';
+
         let dataQuery = `
             SELECT DataSensor.ID, Sensors.sensorName, DataSensor.value, DataSensor.time 
             ${baseQuery} 
-            ORDER BY DataSensor.time ${orderClause} 
+            ${orderClause} 
             LIMIT ? OFFSET ?
         `;
 
-        // Thêm limit và offset vào cuối mảng tham số
         const finalParams = [...queryParams, limit, offset];
         const [rows] = await db.query(dataQuery, finalParams);
 
         res.status(200).json({
             success: true,
-            message: "Lấy dữ liệu thành công!",
             data: rows,
-            pagination: {
-                currentPage: page,
-                totalPages: totalPages,
-                totalRecords: totalRecords,
-                limit: limit
-            }
+            pagination: { currentPage: page, totalPages: totalPages, totalRecords: totalRecords }
         });
     } catch (error) {
-        console.error("Lỗi lấy dữ liệu cảm biến:", error);
-        res.status(500).json({ success: false, message: "Lỗi Server!" });
+        console.error("Lỗi lấy dữ liệu:", error);
+        res.status(500).json({ success: false });
     }
 };
 

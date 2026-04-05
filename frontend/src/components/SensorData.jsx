@@ -3,42 +3,37 @@ import axios from 'axios';
 import './SensorData.css';
 
 const SensorData = () => {
-    // State lưu dữ liệu
     const [sensors, setSensors] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // State cho Phân trang
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const limit = 10; // Số dòng trên 1 trang
+    const [totalRecords, setTotalRecords] = useState(0);
 
-    // State cho Bộ lọc
-    const [filters, setFilters] = useState({
-        sensorType: '',
-        startDate: '',
-        endDate: '',
-        sort: 'newest'
-    });
+    // State chuẩn form theo yêu cầu của bạn
+    const defaultFilters = { sensorType: '', exactValue: '', exactTime: '', sort: 'time-desc' };
+    const [filters, setFilters] = useState(defaultFilters);
 
-    // Hàm gọi API kèm Query Params
-    const fetchSensorData = async () => {
+    // Hàm gọi API (Có tham số override để Reset gọi được ngay lập tức)
+    const fetchSensorData = async (overrideFilters = null) => {
         setIsLoading(true);
+        const currentFilters = overrideFilters || filters;
         try {
-            // Đẩy tất cả state vào URL query
             const response = await axios.get('http://localhost:3000/api/sensors', {
                 params: {
                     page: page,
-                    limit: limit,
-                    sensorType: filters.sensorType,
-                    startDate: filters.startDate,
-                    endDate: filters.endDate,
-                    sort: filters.sort
+                    limit: 10,
+                    sensorType: currentFilters.sensorType,
+                    exactValue: currentFilters.exactValue,
+                    exactTime: currentFilters.exactTime,
+                    sort: currentFilters.sort
                 }
             });
 
             if (response.data.success) {
                 setSensors(response.data.data);
                 setTotalPages(response.data.pagination.totalPages);
+                setTotalRecords(response.data.pagination.totalRecords);
             }
         } catch (error) {
             console.error("Lỗi khi lấy dữ liệu cảm biến:", error);
@@ -47,47 +42,101 @@ const SensorData = () => {
         }
     };
 
-    // Tự động gọi lại API mỗi khi `page` thay đổi
-    useEffect(() => {
-        fetchSensorData();
-    }, [page]);
+    // Theo dõi thay đổi trang -> Gọi lại API
+    useEffect(() => { fetchSensorData(); }, [page]);
 
-    // Bắt sự kiện người dùng nhập bộ lọc
     const handleFilterChange = (e) => {
         setFilters({ ...filters, [e.target.name]: e.target.value });
     };
 
-    // Khi bấm Search, reset về trang 1 và gọi API
+    // Nút Search
     const handleSearch = () => {
-        if (page === 1) {
-            fetchSensorData(); // Nếu đang ở trang 1 thì gọi luôn
-        } else {
-            setPage(1); // Set về 1 sẽ tự trigger useEffect bên trên
-        }
+        if (page === 1) fetchSensorData();
+        else setPage(1);
     };
 
+    // Nút Reset
+    const handleReset = () => {
+        setFilters(defaultFilters);
+        if (page === 1) fetchSensorData(defaultFilters);
+        else setPage(1);
+    };
+
+    // Định dạng yyyy/mm/dd hh:mm:ss
     const formatDate = (isoString) => {
         const date = new Date(isoString);
-        return date.toLocaleString('vi-VN', {
-            year: 'numeric', month: '2-digit', day: '2-digit',
-            hour: '2-digit', minute: '2-digit', second: '2-digit'
-        });
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const hh = String(date.getHours()).padStart(2, '0');
+        const min = String(date.getMinutes()).padStart(2, '0');
+        const ss = String(date.getSeconds()).padStart(2, '0');
+        return `${yyyy}/${mm}/${dd} ${hh}:${min}:${ss}`;
     };
 
-    const getUnit = (sensorName) => {
+    // Ghép Đơn vị vào Giá trị
+    const formatValueWithUnit = (val, sensorName) => {
         const name = sensorName.toLowerCase();
-        if (name.includes('temp')) return '°C';
-        if (name.includes('humid')) return '%';
-        if (name.includes('light')) return 'Lux';
-        if (name.includes('dist')) return 'cm';
-        return 'State';
+        let unit = 'State';
+        if (name.includes('temp')) unit = '°C';
+        if (name.includes('humid')) unit = '%';
+        if (name.includes('light')) unit = 'Lux';
+        if (name.includes('dist')) unit = 'cm';
+
+        // Làm tròn số nếu nó lẻ
+        let num = Number(val);
+        num = num % 1 === 0 ? num : num.toFixed(1);
+        return `${num} ${unit}`;
+    };
+
+    // Thuật toán vẽ nút Phân trang (Siêu Back / Next)
+    const renderPagination = () => {
+        const pages = [];
+        let startPage = Math.max(1, page - 2);
+        let endPage = Math.min(totalPages, page + 2);
+
+        // Đảm bảo luôn hiện 5 nút nếu có đủ trang
+        if (endPage - startPage < 4) {
+            if (startPage === 1) endPage = Math.min(totalPages, 5);
+            else if (endPage === totalPages) startPage = Math.max(1, totalPages - 4);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(
+                <button key={i} className={`page-btn ${page === i ? 'active' : ''}`} onClick={() => setPage(i)}>
+                    {i}
+                </button>
+            );
+        }
+
+        return (
+            <div className="pagination-controls">
+                <button className="nav-btn" disabled={page === 1} onClick={() => setPage(1)} title="Trang đầu">
+                    <i className="fa-solid fa-angles-left"></i>
+                </button>
+                <button className="nav-btn" disabled={page === 1} onClick={() => setPage(page - 1)}>
+                    <i className="fa-solid fa-angle-left"></i>
+                </button>
+
+                {startPage > 1 && <span className="page-dots">...</span>}
+                {pages}
+                {endPage < totalPages && <span className="page-dots">...</span>}
+
+                <button className="nav-btn" disabled={page === totalPages} onClick={() => setPage(page + 1)}>
+                    <i className="fa-solid fa-angle-right"></i>
+                </button>
+                <button className="nav-btn" disabled={page === totalPages} onClick={() => setPage(totalPages)} title="Trang cuối">
+                    <i className="fa-solid fa-angles-right"></i>
+                </button>
+            </div>
+        );
     };
 
     return (
         <div className="table-page">
             <h2><i className="fa-solid fa-database"></i> Sensor Data History</h2>
 
-            {/* --- BỘ LỌC --- */}
+            {/* --- BỘ LỌC CHUYÊN SÂU --- */}
             <div className="filter-container">
                 <div className="filter-row">
                     <div className="filter-item">
@@ -101,24 +150,25 @@ const SensorData = () => {
                         </select>
                     </div>
                     <div className="filter-item">
-                        <label>From Time</label>
-                        <input type="datetime-local" name="startDate" value={filters.startDate} onChange={handleFilterChange} className="input-field" />
+                        <label>Exact Value</label>
+                        <input type="number" name="exactValue" placeholder="E.g., 40, 150" value={filters.exactValue} onChange={handleFilterChange} className="input-field" />
                     </div>
                     <div className="filter-item">
-                        <label>To Time</label>
-                        <input type="datetime-local" name="endDate" value={filters.endDate} onChange={handleFilterChange} className="input-field" />
+                        <label>Exact Time</label>
+                        <input type="text" name="exactTime" placeholder="yyyy/mm/dd hh:mm:ss" value={filters.exactTime} onChange={handleFilterChange} className="input-field" />
                     </div>
                     <div className="filter-item">
-                        <label>Sort</label>
+                        <label>Sort By</label>
                         <select name="sort" value={filters.sort} onChange={handleFilterChange} className="input-field">
-                            <option value="newest">Newest First</option>
-                            <option value="oldest">Oldest First</option>
+                            <option value="time-desc">Time: Newest ➔ Oldest</option>
+                            <option value="time-asc">Time: Oldest ➔ Newest</option>
+                            <option value="value-desc">Value: High ➔ Low</option>
+                            <option value="value-asc">Value: Low ➔ High</option>
                         </select>
                     </div>
                     <div className="btn-group">
-                        <button className="btn btn-search" onClick={handleSearch}>
-                            <i className="fas fa-search"></i> Search
-                        </button>
+                        <button className="btn btn-search" onClick={handleSearch}><i className="fas fa-search"></i> Search</button>
+                        <button className="btn btn-refresh" onClick={handleReset}><i className="fas fa-sync-alt"></i> Reset</button>
                     </div>
                 </div>
             </div>
@@ -128,63 +178,42 @@ const SensorData = () => {
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>STT</th>
                             <th>Sensor</th>
                             <th>Value</th>
-                            <th>Unit</th>
                             <th>Timestamp</th>
                         </tr>
                     </thead>
                     <tbody>
                         {isLoading ? (
-                            <tr>
-                                <td colSpan="5" className="loading-text">
-                                    <i className="fa-solid fa-spinner fa-spin"></i> Loading data...
-                                </td>
-                            </tr>
+                            <tr><td colSpan="4" className="loading-text"><i className="fa-solid fa-spinner fa-spin"></i> Loading data...</td></tr>
                         ) : sensors.length > 0 ? (
                             sensors.map((item, index) => (
                                 <tr key={index}>
-                                    <td>#{item.ID}</td>
+                                    <td>{(page - 1) * 10 + index + 1}</td>
                                     <td>{item.sensorName}</td>
-                                    <td style={{ fontWeight: 'bold', color: '#00d2ff' }}>{item.value}</td>
-                                    <td>{getUnit(item.sensorName)}</td>
+                                    <td style={{ fontWeight: 'bold', color: '#00d2ff' }}>
+                                        {formatValueWithUnit(item.value, item.sensorName)}
+                                    </td>
                                     <td>{formatDate(item.time)}</td>
                                 </tr>
                             ))
                         ) : (
-                            <tr>
-                                <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>No data found.</td>
-                            </tr>
+                            <tr><td colSpan="4" style={{ textAlign: 'center', padding: '30px' }}>Không tìm thấy dữ liệu khớp với bộ lọc!</td></tr>
                         )}
                     </tbody>
                 </table>
             </div>
 
-            {/* --- THANH PHÂN TRANG (PAGINATION) --- */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
-                <button
-                    className="btn btn-refresh"
-                    disabled={page === 1}
-                    onClick={() => setPage(page - 1)}
-                    style={{ opacity: page === 1 ? 0.5 : 1 }}
-                >
-                    <i className="fa-solid fa-chevron-left"></i> Prev
-                </button>
-
-                <span style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', color: 'white' }}>
-                    Page {page} / {totalPages === 0 ? 1 : totalPages}
-                </span>
-
-                <button
-                    className="btn btn-refresh"
-                    disabled={page >= totalPages}
-                    onClick={() => setPage(page + 1)}
-                    style={{ opacity: page >= totalPages ? 0.5 : 1 }}
-                >
-                    Next <i className="fa-solid fa-chevron-right"></i>
-                </button>
-            </div>
+            {/* --- THANH PHÂN TRANG GIAO DIỆN MỚI --- */}
+            {!isLoading && sensors.length > 0 && (
+                <div className="pagination-wrapper">
+                    <div className="total-info">
+                        Showing {(page - 1) * 10 + 1} - {Math.min(page * 10, totalRecords)} of <b>{totalRecords}</b> records
+                    </div>
+                    {renderPagination()}
+                </div>
+            )}
         </div>
     );
 };

@@ -1,5 +1,5 @@
 // src/components/Dashboard.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
     Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend
@@ -9,97 +9,161 @@ import './Dashboard.css';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-// Component đại diện cho 1 nút bấm (Khớp với Sequence Diagram)
+// Component Nút Bấm
 const DeviceControlBtn = ({ deviceId, iconClass, activeClass, defaultName }) => {
-    const [isOn, setIsOn] = useState(false);
+    // FIX 3: Khởi tạo state bằng cách đọc từ LocalStorage (Nhớ được lúc F5 hoặc chuyển trang)
+    const [isOn, setIsOn] = useState(() => {
+        return localStorage.getItem(`device_${deviceId}`) === 'true';
+    });
     const [isLoading, setIsLoading] = useState(false);
 
     const handleToggle = async () => {
         if (isLoading) return;
 
         const targetAction = isOn ? "OFF" : "ON";
-        setIsLoading(true); // Sequence Step 3: Set status to Loading
+        setIsLoading(true);
 
         try {
-            // Sequence Step 2: POST /api/devices/control
             const response = await axios.post('http://localhost:3000/api/devices/control', {
                 deviceId: deviceId,
                 actionName: targetAction
             });
 
             if (response.data.success) {
-                // Sequence Step 10 & 11: HTTP 200 OK & Update UI
-                // Simulate delay for MQTT Hardware ACK
-                setTimeout(() => {
-                    setIsOn(!isOn);
-                    setIsLoading(false);
+                const actionId = response.data.data.actionId;
+                let attempts = 0;
+
+                const checkStatusInterval = setInterval(async () => {
+                    attempts++;
+                    try {
+                        const statusRes = await axios.get(`http://localhost:3000/api/devices/action-status/${actionId}`);
+                        const currentStatus = statusRes.data.data.actionStatus;
+
+                        if (currentStatus === 'SUCCESS') {
+                            clearInterval(checkStatusInterval);
+                            const newState = (targetAction === "ON");
+                            setIsOn(newState);
+                            localStorage.setItem(`device_${deviceId}`, newState);
+                            setIsLoading(false);
+                        } else if (attempts >= 10) {
+                            // Bước 3: Timeout sau 10 giây
+                            clearInterval(checkStatusInterval);
+
+                            // GỌI API BÁO BACKEND SỬA CHỮ 'LOADING' THÀNH 'FAILED' TRONG DB
+                            await axios.put(`http://localhost:3000/api/devices/action-status/${actionId}`);
+
+                            setIsLoading(false);
+                            // Vì ta không gọi setIsOn(newState) ở đây, nên nút sẽ TỰ ĐỘNG LÙI VỀ TRẠNG THÁI CŨ
+                            alert(`⏳ Timeout: Lệnh ${targetAction} cho "${defaultName}" thất bại!`);
+                        }
+                        // eslint-disable-next-line no-unused-vars
+                    } catch (err) {
+                        clearInterval(checkStatusInterval);
+                        setIsLoading(false);
+                    }
                 }, 1000);
             }
         } catch (error) {
             console.error("API Error:", error);
             setIsLoading(false);
-            // Sequence Step 13 & 14: Timeout / Error
-            alert(`Failed to execute: ${defaultName}`);
+            alert(`❌ Lỗi: Không gửi được lệnh tới ${defaultName}`);
         }
     };
 
-    // Cập nhật lại phần return bên trong const DeviceControlBtn = (...) => {
     return (
-        <div
-            className={`control-btn ${isOn ? activeClass : ''} ${isLoading ? 'loading-state' : ''}`}
-            onClick={handleToggle}
-        >
-            {isLoading ? (
-                <i className="fa-solid fa-spinner fa-spin"></i>
-            ) : (
-                <i className={iconClass}></i>
-            )}
-
+        <div className={`control-btn ${isOn ? activeClass : ''} ${isLoading ? 'loading-state' : ''}`} onClick={handleToggle}>
+            {isLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className={iconClass}></i>}
             <span>{defaultName}: {isLoading ? "LOADING..." : (isOn ? "ON" : "OFF")}</span>
-
             <div className="toggle-switch">
                 <div className="toggle-knob" style={{ transform: isOn ? 'translateX(28px)' : 'translateX(0)' }}></div>
             </div>
-
-            {/* Thêm phần này để vẽ hiệu ứng sóng radar đỏ cho nút thứ 4 */}
             {deviceId === 2 && (
-                <div className="alert-waves" aria-hidden="true">
-                    <span></span><span></span><span></span>
-                </div>
+                <div className="alert-waves" aria-hidden="true"><span></span><span></span><span></span></div>
             )}
         </div>
     );
 };
 
+// Component Dashboard
 const Dashboard = () => {
-    // Chart Config matching Figma Dark Theme
+    const [currentStats, setCurrentStats] = useState({
+        temp: 0, humid: 0, light: 0, dist: 0
+    });
+
+    const [chartData, setChartData] = useState({
+        labels: [], temp: [], humid: [], light: [], dist: []
+    });
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchRealtimeData = async () => {
+            try {
+                const response = await axios.get('http://localhost:3000/api/sensors?limit=40&sort=newest');
+
+                if (response.data.success && isMounted) {
+                    const rawData = response.data.data.reverse();
+
+                    const temps = rawData.filter(d => d.sensorName.includes('Temp'));
+                    const humids = rawData.filter(d => d.sensorName.includes('Humid'));
+                    const lights = rawData.filter(d => d.sensorName.includes('Light'));
+                    const dists = rawData.filter(d => d.sensorName.includes('Dist'));
+
+                    // FIX 1: Ép tất cả số liệu về 1 chữ số thập phân (Ví dụ 23.3696 -> 23.4)
+                    const formatNum = (val) => Number(val).toFixed(1);
+
+                    setCurrentStats({
+                        temp: temps.length > 0 ? formatNum(temps[temps.length - 1].value) : "0.0",
+                        humid: humids.length > 0 ? formatNum(humids[humids.length - 1].value) : "0.0",
+                        light: lights.length > 0 ? formatNum(lights[lights.length - 1].value) : "0.0",
+                        dist: dists.length > 0 ? formatNum(dists[dists.length - 1].value) : "0.0",
+                    });
+
+                    setChartData({
+                        labels: temps.map(d => new Date(d.time).toLocaleTimeString('vi-VN')),
+                        temp: temps.map(d => d.value),
+                        humid: humids.map(d => d.value),
+                        light: lights.map(d => d.value),
+                        dist: dists.map(d => d.value),
+                    });
+                }
+            } catch (error) {
+                console.error("Lỗi cập nhật biểu đồ:", error);
+            }
+        };
+
+        fetchRealtimeData();
+        const interval = setInterval(fetchRealtimeData, 2000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, []);
+
+    const tempHumConfig = {
+        labels: chartData.labels,
+        datasets: [
+            { label: 'Laptop Temp (°C)', data: chartData.temp, borderColor: '#ff4d6d', tension: 0.4 },
+            { label: 'Ambient Humid (%)', data: chartData.humid, borderColor: '#00d2ff', tension: 0.4 }
+        ]
+    };
+
+    const lightDistConfig = {
+        labels: chartData.labels,
+        datasets: [
+            { label: 'Ambient Light (Lux)', data: chartData.light, borderColor: '#ffd166', tension: 0.4 },
+            { label: 'Dist (cm)', data: chartData.dist, borderColor: '#a29bfe', tension: 0.4 }
+        ]
+    };
+
     const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { labels: { color: 'rgba(255,255,255,0.9)' } }
-        },
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: 'rgba(255,255,255,0.9)' } } },
         scales: {
-            x: { ticks: { color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            x: { ticks: { color: 'rgba(255,255,255,0.7)', maxTicksLimit: 6 }, grid: { color: 'rgba(255,255,255,0.05)' } },
             y: { ticks: { color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.05)' } }
         }
-    };
-
-    // Dummy data to match your Figma screenshot shape
-    const tempHumData = {
-        labels: ['13:14:05', '13:16:05', '13:18:05', '13:20:05', '13:20:09', '13:20:13'],
-        datasets: [
-            { label: 'Laptop Temp (°C)', data: [35, 38, 49, 36, 41, 39], borderColor: '#ff4d6d', tension: 0.4 },
-            { label: 'Ambient Humid (%)', data: [64, 66, 64, 67, 63, 66], borderColor: '#00d2ff', tension: 0.4 }
-        ]
-    };
-
-    const lightDistData = {
-        labels: ['13:14:05', '13:16:05', '13:18:05', '13:20:05', '13:20:09', '13:20:13'],
-        datasets: [
-            { label: 'Ambient Light (Lux)', data: [880, 320, 980, 250, 680, 100], borderColor: '#ffd166', tension: 0.4 },
-            { label: 'Dist (cm)', data: [75, 41, 79, 45, 28, 78], borderColor: '#a29bfe', tension: 0.4 }
-        ]
     };
 
     return (
@@ -109,28 +173,28 @@ const Dashboard = () => {
                 <div className="stat-card">
                     <div className="stat-info">
                         <h3>Laptop Temp</h3>
-                        <h1>42.5 °C</h1>
+                        <h1>{currentStats.temp} °C</h1>
                     </div>
                     <div className="card-icon temp-icon"><i className="fa-solid fa-temperature-three-quarters"></i></div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-info">
                         <h3>Ambient Humid</h3>
-                        <h1>65.0 %</h1>
+                        <h1>{currentStats.humid} %</h1>
                     </div>
                     <div className="card-icon hum-icon"><i className="fa-solid fa-droplet"></i></div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-info">
                         <h3>Ambient Light</h3>
-                        <h1>300 Lux</h1>
+                        <h1>{currentStats.light} Lux</h1>
                     </div>
                     <div className="card-icon light-icon"><i className="fa-solid fa-sun"></i></div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-info">
-                        <h3>Sitting Distance (cm)</h3>
-                        <h1>42 cm</h1>
+                        <h3>Sitting Distance</h3>
+                        <h1>{currentStats.dist} cm</h1>
                     </div>
                     <div className="card-icon dist-icon"><i className="fa-solid fa-ruler"></i></div>
                 </div>
@@ -140,11 +204,11 @@ const Dashboard = () => {
             <div className="charts-container">
                 <div className="chart-wrapper">
                     <div className="chart-title">Temperature & Humidity</div>
-                    <div className="chart-body"><Line data={tempHumData} options={chartOptions} /></div>
+                    <div className="chart-body"><Line data={tempHumConfig} options={chartOptions} /></div>
                 </div>
                 <div className="chart-wrapper">
                     <div className="chart-title">Light & Distance</div>
-                    <div className="chart-body"><Line data={lightDistData} options={chartOptions} /></div>
+                    <div className="chart-body"><Line data={lightDistConfig} options={chartOptions} /></div>
                 </div>
             </div>
 

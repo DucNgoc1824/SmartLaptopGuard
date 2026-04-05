@@ -140,3 +140,61 @@ tr:hover {
     font-size: 18px;
     font-weight: bold;
 }
+
+/* --- PAGINATION CSS --- */
+.pagination-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.total-info {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.page-btn,
+.nav-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.85);
+    min-width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-btn:hover:not(:disabled),
+.nav-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.page-btn.active {
+    background: var(--gradient-brand);
+    color: #fff;
+    border-color: transparent;
+}
+
+.nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.page-dots {
+    color: rgba(255, 255, 255, 0.5);
+    padding: 0 5px;
+}
