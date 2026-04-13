@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './SensorData.css';
+import '../style/SensorData.css';
 
 const SensorData = () => {
     const [sensors, setSensors] = useState([]);

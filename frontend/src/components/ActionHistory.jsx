@@ -1,7 +1,7 @@
 // src/components/ActionHistory.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './ActionHistory.css';
+import '../style/ActionHistory.css';
 
 const ActionHistory = () => {
     const [history, setHistory] = useState([]);

@@ -1,6 +1,6 @@
 // src/components/Profile.jsx
 import React from 'react';
-import './Profile.css';
+import '../style/Profile.css';
 
 const Profile = () => {
     return (

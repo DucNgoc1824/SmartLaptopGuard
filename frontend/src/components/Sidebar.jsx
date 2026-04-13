@@ -1,6 +1,6 @@
 // src/components/Sidebar.jsx
 import React from 'react';
-import './Sidebar.css';
+import '../style/Sidebar.css';
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
     const menuItems = [
