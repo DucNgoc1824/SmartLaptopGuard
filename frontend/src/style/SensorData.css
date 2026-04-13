@@ -179,6 +179,31 @@ tr:hover {
     gap: 8px;
 }
 
+.pagination-right-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.limit-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.limit-label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.limit-select {
+    padding: 6px 10px;
+    height: 38px;
+    min-width: 85px;
+    font-size: 13px;
+}
+
 .page-btn,
 .nav-btn {
     background: rgba(255, 255, 255, 0.06);
@@ -214,4 +239,18 @@ tr:hover {
 .page-dots {
     color: rgba(255, 255, 255, 0.5);
     padding: 0 5px;
+}
+
+@media (max-width: 768px) {
+    .pagination-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .pagination-right-group {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
 }

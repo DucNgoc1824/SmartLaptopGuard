@@ -7,6 +7,7 @@ const SensorData = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
     const [totalPages, setTotalPages] = useState(1);
     const [totalRecords, setTotalRecords] = useState(0);
 
@@ -22,7 +23,7 @@ const SensorData = () => {
             const response = await axios.get('http://localhost:3000/api/sensors', {
                 params: {
                     page: page,
-                    limit: 10,
+                    limit: limit,
                     sensorType: currentFilters.sensorType,
                     exactValue: currentFilters.exactValue,
                     exactTime: currentFilters.exactTime,
@@ -44,6 +45,11 @@ const SensorData = () => {
 
     // Theo dõi thay đổi trang -> Gọi lại API
     useEffect(() => { fetchSensorData(); }, [page]);
+
+    useEffect(() => {
+        if (page === 1) fetchSensorData();
+        else setPage(1);
+    }, [limit]);
 
     const handleFilterChange = (e) => {
         setFilters({ ...filters, [e.target.name]: e.target.value });
@@ -200,7 +206,7 @@ const SensorData = () => {
                         ) : sensors.length > 0 ? (
                             sensors.map((item, index) => (
                                 <tr key={index}>
-                                    <td>{(page - 1) * 10 + index + 1}</td>
+                                    <td>{(page - 1) * limit + index + 1}</td>
                                     <td>{item.sensorName}</td>
                                     <td style={{ fontWeight: 'bold', color: getValueColor(item.sensorName) }}>
                                         {formatValueWithUnit(item.value, item.sensorName)}
@@ -219,9 +225,24 @@ const SensorData = () => {
             {!isLoading && sensors.length > 0 && (
                 <div className="pagination-wrapper">
                     <div className="total-info">
-                        Showing {(page - 1) * 10 + 1} - {Math.min(page * 10, totalRecords)} of <b>{totalRecords}</b> records
+                        Showing {(page - 1) * limit + 1} - {Math.min(page * limit, totalRecords)} of <b>{totalRecords}</b> records
                     </div>
-                    {renderPagination()}
+                    <div className="pagination-right-group">
+                        <div className="limit-selector">
+                            <span className="limit-label">Rows per page:</span>
+                            <select
+                                value={limit}
+                                onChange={(e) => setLimit(Number(e.target.value))}
+                                className="input-field limit-select"
+                            >
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
+                            </select>
+                        </div>
+                        {renderPagination()}
+                    </div>
                 </div>
             )}
         </div>
