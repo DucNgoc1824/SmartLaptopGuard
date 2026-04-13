@@ -9,6 +9,7 @@ const ActionHistory = () => {
 
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
+    const [limitInput, setLimitInput] = useState('10');
     const [totalPages, setTotalPages] = useState(1);
     const [totalRecords, setTotalRecords] = useState(0);
 
@@ -64,6 +65,13 @@ const ActionHistory = () => {
         setFilters(defaultFilters);
         if (page === 1) fetchHistory(defaultFilters);
         else setPage(1);
+    };
+
+    const applyLimitInput = () => {
+        const parsed = Number(limitInput);
+        const normalized = Number.isFinite(parsed) && parsed > 0 ? Math.min(500, Math.floor(parsed)) : 10;
+        setLimitInput(String(normalized));
+        if (normalized !== limit) setLimit(normalized);
     };
 
     const formatDate = (isoString) => {
@@ -216,16 +224,19 @@ const ActionHistory = () => {
                     <div className="pagination-right-group">
                         <div className="limit-selector">
                             <span className="limit-label">Rows per page:</span>
-                            <select
-                                value={limit}
-                                onChange={(e) => setLimit(Number(e.target.value))}
+                            <input
+                                type="number"
+                                min="1"
+                                max="500"
+                                step="1"
+                                value={limitInput}
+                                onChange={(e) => setLimitInput(e.target.value)}
+                                onBlur={applyLimitInput}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') applyLimitInput();
+                                }}
                                 className="input-field limit-select"
-                            >
-                                <option value={10}>10</option>
-                                <option value={20}>20</option>
-                                <option value={50}>50</option>
-                                <option value={100}>100</option>
-                            </select>
+                            />
                         </div>
                         {renderPagination()}
                     </div>
