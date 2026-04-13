@@ -31,3 +31,42 @@
     color: rgba(255, 209, 102, 0.95);
     border: 1px solid rgba(255, 209, 102, 0.3);
 }
+
+.action-history-page .filter-row {
+    gap: 12px;
+}
+
+.action-history-page .filter-item.filter-compact {
+    flex: 0 1 130px;
+    min-width: 120px;
+}
+
+.action-history-page .filter-item.filter-time {
+    flex: 1 1 220px;
+    min-width: 190px;
+}
+
+.action-history-page .filter-item.filter-sort {
+    flex: 0 1 190px;
+    min-width: 160px;
+}
+
+.action-history-page .btn-group {
+    margin-left: 0;
+    align-self: flex-end;
+    flex-shrink: 0;
+}
+
+@media (max-width: 1100px) {
+
+    .action-history-page .filter-item.filter-compact,
+    .action-history-page .filter-item.filter-sort,
+    .action-history-page .filter-item.filter-time {
+        flex: 1 1 180px;
+        min-width: 160px;
+    }
+
+    .action-history-page .btn-group {
+        margin-left: auto;
+    }
+}

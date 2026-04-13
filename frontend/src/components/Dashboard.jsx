@@ -75,7 +75,7 @@ const DeviceControlBtn = ({ deviceId, iconClass, activeClass, defaultName }) => 
             {isLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className={iconClass}></i>}
             <span>{defaultName}: {isLoading ? "LOADING..." : (isOn ? "ON" : "OFF")}</span>
             <div className="toggle-switch">
-                <div className="toggle-knob" style={{ transform: isOn ? 'translateX(28px)' : 'translateX(0)' }}></div>
+                <div className="toggle-knob" style={{ transform: isOn ? 'translateX(24px)' : 'translateX(0)' }}></div>
             </div>
             {deviceId === 2 && (
                 <div className="alert-waves" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -218,6 +218,7 @@ const Dashboard = () => {
                 <DeviceControlBtn deviceId={1} iconClass="fa-regular fa-lightbulb" activeClass="active-light" defaultName="RGB Light" />
                 <DeviceControlBtn deviceId={4} iconClass="fa-solid fa-droplet-slash" activeClass="active-ac" defaultName="Dehumidifier" />
                 <DeviceControlBtn deviceId={2} iconClass="fa-solid fa-bell" activeClass="active-posture" defaultName="Posture Alert" />
+                <DeviceControlBtn deviceId={5} iconClass="fa-solid fa-microchip" activeClass="active-light" defaultName="NewDevice" />
             </div>
         </div>
     );

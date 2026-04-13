@@ -120,13 +120,15 @@
 /* Controls */
 .controls-container {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 25px;
+    /* ĐÃ SỬA: Chia thành 5 cột bằng nhau */
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
 }
 
 .control-btn {
     background: var(--gradient-card);
-    padding: 20px;
+    /* ĐÃ SỬA: Ép khoảng trống nhỏ lại để vừa 5 nút */
+    padding: 15px 5px;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
     display: flex;
@@ -135,7 +137,7 @@
     justify-content: center;
     cursor: pointer;
     transition: 0.3s;
-    height: 160px;
+    height: 125px;
     position: relative;
     border: 1px solid var(--border);
     -webkit-backdrop-filter: blur(14px);
@@ -149,8 +151,8 @@
 }
 
 .control-btn i {
-    font-size: 36px;
-    margin-bottom: 10px;
+    font-size: 28px;
+    margin-bottom: 8px;
     color: rgba(255, 255, 255, 0.55);
     transition: 0.3s;
 }
@@ -158,14 +160,20 @@
 .control-btn span {
     font-weight: 600;
     color: rgba(255, 255, 255, 0.75);
-    font-size: 16px;
-    margin-bottom: 15px;
+    /* ĐÃ SỬA: Thu nhỏ chữ và ép không rớt dòng */
+    font-size: 12px;
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 95%;
 }
 
 /* Toggle Switch */
 .toggle-switch {
-    width: 60px;
-    height: 30px;
+    /* ĐÃ SỬA: Thu nhỏ tổng thể thanh gạt */
+    width: 50px;
+    height: 26px;
     background: linear-gradient(135deg, rgba(255, 77, 109, 0.85), rgba(255, 77, 109, 0.55));
     border-radius: 30px;
     position: relative;
@@ -175,8 +183,9 @@
 }
 
 .toggle-knob {
-    width: 26px;
-    height: 26px;
+    /* ĐÃ SỬA: Thu nhỏ cục gạt bên trong */
+    width: 22px;
+    height: 22px;
     background-color: white;
     border-radius: 50%;
     position: absolute;
@@ -216,12 +225,9 @@
     animation: spin 1s linear infinite !important;
     text-shadow: none !important;
     transform-origin: center center !important;
-
-    /* ĐÂY LÀ DÒNG CHỐT HẠ: Tắt transition để vòng quay không bị giật/rung */
     transition: none !important;
 }
 
-/* Tiện tay: Tắt luôn cái sóng radar đỏ của Posture Alert lúc đang Loading cho nó gọn */
 .control-btn.loading-state .alert-waves {
     opacity: 0 !important;
 }
@@ -253,7 +259,6 @@
     animation: spin 0.8s linear infinite;
 }
 
-
 .control-btn.active-light {
     border-color: rgba(255, 209, 102, 0.65);
     background: linear-gradient(135deg, rgba(255, 209, 102, 0.2), rgba(255, 255, 255, 0.06));
@@ -270,7 +275,6 @@
     text-shadow: 0 0 15px var(--warning);
 }
 
-
 .control-btn.active-ac {
     border-color: rgba(46, 229, 157, 0.6);
     background: linear-gradient(135deg, rgba(46, 229, 157, 0.18), rgba(255, 255, 255, 0.06));
@@ -285,7 +289,6 @@
 .control-btn.active-ac i {
     animation: drop 1s ease-in-out infinite;
 }
-
 
 .control-btn.active-posture {
     border-color: rgba(255, 77, 109, 0.7);

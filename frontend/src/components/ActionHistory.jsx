@@ -13,8 +13,8 @@ const ActionHistory = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [totalRecords, setTotalRecords] = useState(0);
 
-    // Đổi lại defaultFilters có thêm sort
-    const defaultFilters = { device: '', exactTime: '', sort: 'time-desc' };
+    // Bộ lọc mặc định cho Action History
+    const defaultFilters = { device: '', action: '', status: '', exactTime: '', sort: 'time-desc' };
     const [filters, setFilters] = useState(defaultFilters);
 
     const fetchHistory = async (overrideFilters = null) => {
@@ -147,12 +147,12 @@ const ActionHistory = () => {
     };
 
     return (
-        <div className="table-page">
+        <div className="table-page action-history-page">
             <h2><i className="fa-solid fa-clock-rotate-left"></i> Action History</h2>
 
             <div className="filter-container">
                 <div className="filter-row">
-                    <div className="filter-item">
+                    <div className="filter-item filter-compact">
                         <label>Device</label>
                         <select name="device" value={filters.device} onChange={handleFilterChange} className="input-field">
                             <option value="">All Devices</option>
@@ -160,14 +160,30 @@ const ActionHistory = () => {
                             <option value="Light">RGB Light</option>
                             <option value="Dehumidifier">Dehumidifier</option>
                             <option value="Posture">Posture Alert</option>
+                            <option value="NewDevice">New Device</option>
                         </select>
                     </div>
-                    {/* ĐÃ XÓA 2 DROP DOWN ACTION VÀ STATUS Ở ĐÂY */}
-                    <div className="filter-item">
+                    <div className="filter-item filter-compact">
+                        <label>Action</label>
+                        <select name="action" value={filters.action} onChange={handleFilterChange} className="input-field">
+                            <option value="">All Actions</option>
+                            <option value="ON">ON</option>
+                            <option value="OFF">OFF</option>
+                        </select>
+                    </div>
+                    <div className="filter-item filter-compact">
+                        <label>Status</label>
+                        <select name="status" value={filters.status} onChange={handleFilterChange} className="input-field">
+                            <option value="">All Status</option>
+                            <option value="SUCCESS">Success</option>
+                            <option value="FAILED">Failed</option>
+                        </select>
+                    </div>
+                    <div className="filter-item filter-time">
                         <label>Exact Time</label>
                         <input type="text" name="exactTime" placeholder="yyyy/mm/dd hh:mm:ss" value={filters.exactTime} onChange={handleFilterChange} className="input-field" />
                     </div>
-                    <div className="filter-item">
+                    <div className="filter-item filter-sort">
                         <label>Sort By</label>
                         <select name="sort" value={filters.sort} onChange={handleFilterChange} className="input-field">
                             <option value="time-desc">Time: Newest ➔ Oldest</option>
