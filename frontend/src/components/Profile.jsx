@@ -56,7 +56,7 @@ const Profile = () => {
             <div>
                 <div className="section-title">Resources & Source Code</div>
                 <div className="resource-grid">
-                    <a href="#" target='blank' className="resource-card card-pdf">
+                    <a href="https://drive.google.com/file/d/1k43xZ9dSp0couS-Lp5e7MGemPvR1lhxZ/view?usp=sharing" target='blank' className="resource-card card-pdf">
                         <div className="res-icon"><i className="fa-solid fa-file-pdf"></i></div>
                         <div className="res-content">
                             <h3>Project Report</h3>
