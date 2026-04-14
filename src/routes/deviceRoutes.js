@@ -12,6 +12,9 @@ router.post('/control', deviceController.controlDevice);
 // CHÚ Ý: Phải đặt /history lên TRƯỚC /:id để không bị nhận nhầm
 router.get('/history', deviceController.getActionHistory);
 
+// API thống kê hành động thành công theo ngày
+router.get('/stats', deviceController.getActionStats);
+
 // Thêm API kiểm tra trạng thái
 router.get('/action-status/:id', deviceController.getActionStatus);
 

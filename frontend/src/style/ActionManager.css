@@ -1,0 +1,39 @@
+@import './ActionHistory.css';
+
+.action-manager-page {
+    height: 100%;
+}
+
+.action-manager-chart-panel {
+    background: var(--gradient-card);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 420px;
+}
+
+.action-manager-title {
+    color: rgba(255, 255, 255, 0.92);
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.action-manager-chart-body {
+    position: relative;
+    flex: 1;
+    min-height: 330px;
+}
+
+.action-manager-empty {
+    height: 100%;
+    display: grid;
+    place-items: center;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 600;
+}

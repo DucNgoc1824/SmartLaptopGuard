@@ -175,7 +175,7 @@ const SensorData = () => {
                     </div>
                     <div className="filter-item">
                         <label>Exact Value</label>
-                        <input type="number" name="exactValue" placeholder="E.g., 40, 150" value={filters.exactValue} onChange={handleFilterChange} className="input-field" />
+                        <input type="number" step="0.1" name="exactValue" placeholder="E.g., 40 or 40.5" value={filters.exactValue} onChange={handleFilterChange} className="input-field" />
                     </div>
                     <div className="filter-item">
                         <label>Exact Time</label>

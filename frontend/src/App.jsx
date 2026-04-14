@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import SensorData from './components/SensorData';
 import ActionHistory from './components/ActionHistory'; // Import mới
+import ActionManager from './components/ActionManager';
 import Profile from './components/Profile';             // Import mới
 import './index.css';
 
@@ -20,6 +21,7 @@ function App() {
 
         {/* Render 2 trang mới */}
         {activeTab === 'action-history' && <ActionHistory />}
+        {activeTab === 'action-manager' && <ActionManager />}
         {activeTab === 'profile' && <Profile />}
       </main>
     </div>

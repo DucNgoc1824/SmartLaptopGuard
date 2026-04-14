@@ -22,10 +22,23 @@ const getSensorData = async (req, res) => {
             queryParams.push(`%${sensorType}%`);
         }
 
-        // 2. Lọc chính xác theo Giá trị (Ví dụ: 40, 150)
-        if (exactValue) {
-            baseQuery += ` AND DataSensor.value = ?`;
-            queryParams.push(exactValue);
+        // 2. Lọc theo Giá trị (khớp theo 1 chữ số thập phân để đồng bộ UI hiển thị)
+        const hasExactValue = exactValue !== undefined
+            && exactValue !== null
+            && String(exactValue).trim() !== '';
+        if (hasExactValue) {
+            const normalizedValue = String(exactValue).trim().replace(',', '.');
+            const parsedValue = Number(normalizedValue);
+
+            if (!Number.isFinite(parsedValue)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'exactValue must be a valid number'
+                });
+            }
+
+            baseQuery += ` AND ROUND(DataSensor.value, 1) = ROUND(?, 1)`;
+            queryParams.push(parsedValue);
         }
 
         // 3. Lọc chính xác theo Thời gian (yyyy/mm/dd hh:mm:ss)

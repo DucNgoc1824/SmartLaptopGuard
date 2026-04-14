@@ -107,6 +107,89 @@ const getActionHistory = async (req, res) => {
     }
 };
 
+const getActionStats = async (req, res) => {
+    try {
+        const query = `
+            SELECT
+                DATE(a.time) as actionDate,
+                d.deviceName,
+                COUNT(a.ID) as count
+            FROM Actions a
+            JOIN Devices d ON a.deviceID = d.ID
+            WHERE a.actionStatus = 'SUCCESS'
+            GROUP BY DATE(a.time), d.deviceName
+            ORDER BY actionDate ASC;
+        `;
+
+        const [rows] = await db.query(query);
+        const statsByDate = {};
+        const defaultBreakdown = {
+            'Cooling Fan': 0,
+            'RGB Light': 0,
+            'Dehumidifier': 0,
+            'Posture Alert': 0,
+            'NewDevice': 0,
+        };
+
+        const normalizeDateKey = (value) => {
+            const raw = String(value || '').slice(0, 10);
+            if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+            const parsed = new Date(value);
+            if (Number.isNaN(parsed.getTime())) return null;
+            return parsed.toISOString().slice(0, 10);
+        };
+
+        rows.forEach((row) => {
+            const dateKey = normalizeDateKey(row.actionDate);
+            if (!dateKey) return;
+
+            if (!statsByDate[dateKey]) {
+                statsByDate[dateKey] = {
+                    date: dateKey,
+                    total: 0,
+                    breakdown: { ...defaultBreakdown },
+                };
+            }
+
+            if (statsByDate[dateKey].breakdown[row.deviceName] === undefined) {
+                statsByDate[dateKey].breakdown[row.deviceName] = 0;
+            }
+
+            const count = Number(row.count) || 0;
+            statsByDate[dateKey].breakdown[row.deviceName] = count;
+            statsByDate[dateKey].total += count;
+        });
+
+        const sortedDateKeys = Object.keys(statsByDate).sort();
+
+        if (sortedDateKeys.length > 0) {
+            let cursor = new Date(`${sortedDateKeys[0]}T00:00:00.000Z`);
+            const end = new Date(`${sortedDateKeys[sortedDateKeys.length - 1]}T00:00:00.000Z`);
+
+            while (cursor <= end) {
+                const dateKey = cursor.toISOString().slice(0, 10);
+
+                if (!statsByDate[dateKey]) {
+                    statsByDate[dateKey] = {
+                        date: dateKey,
+                        total: 0,
+                        breakdown: { ...defaultBreakdown },
+                    };
+                }
+
+                cursor.setUTCDate(cursor.getUTCDate() + 1);
+            }
+        }
+
+        const normalizedData = Object.values(statsByDate).sort((a, b) => a.date.localeCompare(b.date));
+        res.status(200).json({ success: true, data: normalizedData });
+    } catch (error) {
+        console.error('Loi lay thong ke Action:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 const markActionFailed = async (req, res) => {
     try {
         await db.query('UPDATE Actions SET actionStatus = "FAILED" WHERE ID = ?', [req.params.id]);
@@ -116,4 +199,11 @@ const markActionFailed = async (req, res) => {
     }
 };
 
-module.exports = { getAllDevices, controlDevice, getActionStatus, getActionHistory, markActionFailed };
+module.exports = {
+    getAllDevices,
+    controlDevice,
+    getActionStatus,
+    getActionHistory,
+    getActionStats,
+    markActionFailed,
+};

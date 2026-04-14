@@ -7,6 +7,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
         { id: 'dashboard', icon: 'fa-gauge-high', label: 'Dashboard' },
         { id: 'sensor-data', icon: 'fa-database', label: 'Sensor Data' },
         { id: 'action-history', icon: 'fa-clock-rotate-left', label: 'Action History' },
+        { id: 'action-manager', icon: 'fa-chart-line', label: 'Action Manager' },
         { id: 'profile', icon: 'fa-user-gear', label: 'Profile & Docs' },
     ];
 
