@@ -37,3 +37,55 @@
     color: rgba(255, 255, 255, 0.8);
     font-weight: 600;
 }
+
+.am-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.am-title-group p {
+    margin: 5px 0 0 0;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.am-date-picker {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.am-date-picker label {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+}
+
+.am-date-picker input[type="date"] {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    color-scheme: dark;
+}
+
+.am-date-picker input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: 0.2s;
+}
+
+.am-date-picker input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}

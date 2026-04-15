@@ -109,83 +109,34 @@ const getActionHistory = async (req, res) => {
 
 const getActionStats = async (req, res) => {
     try {
+        const targetDate = req.query.date || new Date().toISOString().slice(0, 10);
+
         const query = `
             SELECT
-                DATE(a.time) as actionDate,
                 d.deviceName,
-                COUNT(a.ID) as count
+                SUM(CASE WHEN a.actionName = 'ON' THEN 1 ELSE 0 END) as onCount,
+                SUM(CASE WHEN a.actionName = 'OFF' THEN 1 ELSE 0 END) as offCount
             FROM Actions a
             JOIN Devices d ON a.deviceID = d.ID
-            WHERE a.actionStatus = 'SUCCESS'
-            GROUP BY DATE(a.time), d.deviceName
-            ORDER BY actionDate ASC;
+            WHERE a.actionStatus = 'SUCCESS' AND DATE(a.time) = ?
+            GROUP BY d.deviceName;
         `;
 
-        const [rows] = await db.query(query);
-        const statsByDate = {};
-        const defaultBreakdown = {
-            'Cooling Fan': 0,
-            'RGB Light': 0,
-            'Dehumidifier': 0,
-            'Posture Alert': 0,
-            'NewDevice': 0,
-        };
+        const [rows] = await db.query(query, [targetDate]);
+        const defaultDevices = ['Cooling Fan', 'RGB Light', 'Dehumidifier', 'Posture Alert', 'NewDevice'];
 
-        const normalizeDateKey = (value) => {
-            const raw = String(value || '').slice(0, 10);
-            if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-
-            const parsed = new Date(value);
-            if (Number.isNaN(parsed.getTime())) return null;
-            return parsed.toISOString().slice(0, 10);
-        };
-
-        rows.forEach((row) => {
-            const dateKey = normalizeDateKey(row.actionDate);
-            if (!dateKey) return;
-
-            if (!statsByDate[dateKey]) {
-                statsByDate[dateKey] = {
-                    date: dateKey,
-                    total: 0,
-                    breakdown: { ...defaultBreakdown },
-                };
-            }
-
-            if (statsByDate[dateKey].breakdown[row.deviceName] === undefined) {
-                statsByDate[dateKey].breakdown[row.deviceName] = 0;
-            }
-
-            const count = Number(row.count) || 0;
-            statsByDate[dateKey].breakdown[row.deviceName] = count;
-            statsByDate[dateKey].total += count;
+        const statsData = defaultDevices.map((deviceName) => {
+            const found = rows.find((r) => r.deviceName === deviceName);
+            return {
+                deviceName,
+                onCount: found ? Number(found.onCount) : 0,
+                offCount: found ? Number(found.offCount) : 0,
+            };
         });
 
-        const sortedDateKeys = Object.keys(statsByDate).sort();
-
-        if (sortedDateKeys.length > 0) {
-            let cursor = new Date(`${sortedDateKeys[0]}T00:00:00.000Z`);
-            const end = new Date(`${sortedDateKeys[sortedDateKeys.length - 1]}T00:00:00.000Z`);
-
-            while (cursor <= end) {
-                const dateKey = cursor.toISOString().slice(0, 10);
-
-                if (!statsByDate[dateKey]) {
-                    statsByDate[dateKey] = {
-                        date: dateKey,
-                        total: 0,
-                        breakdown: { ...defaultBreakdown },
-                    };
-                }
-
-                cursor.setUTCDate(cursor.getUTCDate() + 1);
-            }
-        }
-
-        const normalizedData = Object.values(statsByDate).sort((a, b) => a.date.localeCompare(b.date));
-        res.status(200).json({ success: true, data: normalizedData });
+        res.status(200).json({ success: true, date: targetDate, data: statsData });
     } catch (error) {
-        console.error('Loi lay thong ke Action:', error);
+        console.error('Lỗi lấy thống kê Action:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };

@@ -1,65 +1,67 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-    Filler,
+    Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import '../style/ActionManager.css';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-const DEVICE_ORDER = ['Cooling Fan', 'RGB Light', 'Dehumidifier', 'Posture Alert', 'NewDevice'];
+const ACTION_MANAGER_DATE_KEY = 'action_manager_selected_date';
 
-const formatLabelDate = (dateString) => {
-    const dateObj = new Date(dateString);
-    if (Number.isNaN(dateObj.getTime())) return dateString;
-    const dd = String(dateObj.getDate()).padStart(2, '0');
-    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-    return `${dd}/${mm}`;
+const getTodayLocalDate = () => {
+    const now = new Date();
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 10);
 };
+
+const isValidDateString = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value || '');
 
 const ActionManager = () => {
     const [chartData, setChartData] = useState(null);
-    const [rawData, setRawData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedDate, setSelectedDate] = useState(() => {
+        const storedDate = localStorage.getItem(ACTION_MANAGER_DATE_KEY);
+        return isValidDateString(storedDate) ? storedDate : getTodayLocalDate();
+    });
+
+    useEffect(() => {
+        localStorage.setItem(ACTION_MANAGER_DATE_KEY, selectedDate);
+    }, [selectedDate]);
 
     useEffect(() => {
         const fetchStats = async () => {
             setIsLoading(true);
             try {
-                const response = await axios.get('http://localhost:3000/api/devices/stats');
+                const response = await axios.get(`http://localhost:3000/api/devices/stats?date=${selectedDate}`);
                 if (response.data.success) {
                     const data = response.data.data || [];
-                    setRawData(data);
 
                     setChartData({
-                        labels: data.map((item) => formatLabelDate(item.date)),
+                        labels: data.map((item) => item.deviceName),
                         datasets: [
                             {
-                                label: 'Total successful control actions',
-                                data: data.map((item) => item.total),
-                                borderColor: '#00d2ff',
-                                backgroundColor: 'rgba(0, 210, 255, 0.18)',
-                                fill: true,
-                                tension: 0.35,
-                                pointRadius: 4,
-                                pointHoverRadius: 7,
-                                pointBackgroundColor: '#00d2ff',
+                                label: 'ON Count',
+                                data: data.map((item) => item.onCount),
+                                backgroundColor: 'rgba(46, 229, 157, 0.85)',
+                                borderRadius: 6,
+                                barPercentage: 0.6,
+                                categoryPercentage: 0.8
+                            },
+                            {
+                                label: 'OFF Count',
+                                data: data.map((item) => item.offCount),
+                                backgroundColor: 'rgba(149, 165, 166, 0.85)',
+                                borderRadius: 6,
+                                barPercentage: 0.6,
+                                categoryPercentage: 0.8
                             },
                         ],
                     });
                 }
             } catch (error) {
                 console.error('Failed to fetch action statistics:', error);
-                setRawData([]);
                 setChartData(null);
             } finally {
                 setIsLoading(false);
@@ -67,66 +69,66 @@ const ActionManager = () => {
         };
 
         fetchStats();
-    }, []);
+    }, [selectedDate]);
 
     const chartOptions = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-            legend: { labels: { color: 'rgba(255,255,255,0.9)' } },
+            legend: {
+                labels: { color: 'rgba(255,255,255,0.9)', font: { size: 13 } },
+                position: 'top',
+                align: 'end'
+            },
             tooltip: {
                 backgroundColor: 'rgba(0, 0, 0, 0.85)',
                 titleColor: '#ffffff',
                 bodyColor: '#ffffff',
                 padding: 12,
-                callbacks: {
-                    label: (context) => `Total: ${context.parsed.y} times`,
-                    afterBody: (context) => {
-                        const dataIndex = context[0]?.dataIndex;
-                        const dayData = rawData[dataIndex];
-                        if (!dayData) return [];
-
-                        const breakdown = dayData.breakdown || {};
-                        const extraDeviceNames = Object.keys(breakdown).filter(
-                            (name) => !DEVICE_ORDER.includes(name)
-                        );
-                        const orderedDeviceNames = [...DEVICE_ORDER, ...extraDeviceNames];
-
-                        return [
-                            '-------------------------',
-                            ...orderedDeviceNames.map((deviceName) => `${deviceName}: ${breakdown[deviceName] || 0} times`),
-                        ];
-                    },
-                },
             },
         },
         scales: {
             x: {
-                ticks: { color: 'rgba(255,255,255,0.7)' },
-                grid: { color: 'rgba(255,255,255,0.05)' },
+                ticks: { color: 'rgba(255,255,255,0.7)', font: { weight: 'bold' } },
+                grid: { color: 'rgba(255,255,255,0.05)', display: false },
             },
             y: {
                 beginAtZero: true,
                 ticks: {
                     color: 'rgba(255,255,255,0.7)',
                     precision: 0,
+                    stepSize: 2,
                 },
-                grid: { color: 'rgba(255,255,255,0.05)' },
+                grid: { color: 'rgba(255,255,255,0.1)', borderDash: [5, 5] },
             },
         },
     };
 
     return (
         <div className="table-page action-manager-page">
-            <h2><i className="fa-solid fa-chart-line"></i> Action Manager</h2>
+            <h2><i className="fa-solid fa-chart-simple"></i> Action Manager</h2>
 
             <div className="action-manager-chart-panel">
-                <div className="action-manager-title">Daily Device Control Activity</div>
+                <div className="am-top-bar">
+                    <div className="am-title-group">
+                        <div className="action-manager-title">Device ON/OFF statistics</div>
+                        <p>Successful actions for the selected date</p>
+                    </div>
+                    <div className="am-date-picker">
+                        <label>Select date:</label>
+                        <input
+                            type="date"
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                        />
+                    </div>
+                </div>
+
                 <div className="action-manager-chart-body">
-                    {isLoading && <div className="action-manager-empty">Loading data...</div>}
-                    {!isLoading && chartData && rawData.length > 0 && <Line data={chartData} options={chartOptions} />}
-                    {!isLoading && rawData.length === 0 && (
-                        <div className="action-manager-empty">No successful actions available for statistics.</div>
+                    {isLoading && <div className="action-manager-empty"><i className="fa-solid fa-spinner fa-spin"></i> Loading data...</div>}
+                    {!isLoading && chartData && <Bar data={chartData} options={chartOptions} />}
+                    {!isLoading && !chartData && (
+                        <div className="action-manager-empty">No data found.</div>
                     )}
                 </div>
             </div>

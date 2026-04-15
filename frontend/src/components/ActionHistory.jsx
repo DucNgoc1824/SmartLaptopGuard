@@ -61,6 +61,13 @@ const ActionHistory = () => {
         else setPage(1);
     };
 
+    const handleFilterKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleSearch();
+        }
+    };
+
     const handleReset = () => {
         setFilters(defaultFilters);
         if (page === 1) fetchHistory(defaultFilters);
@@ -151,7 +158,7 @@ const ActionHistory = () => {
             <h2><i className="fa-solid fa-clock-rotate-left"></i> Action History</h2>
 
             <div className="filter-container">
-                <div className="filter-row">
+                <div className="filter-row" onKeyDown={handleFilterKeyDown}>
                     <div className="filter-item filter-compact">
                         <label>Device</label>
                         <select name="device" value={filters.device} onChange={handleFilterChange} className="input-field">

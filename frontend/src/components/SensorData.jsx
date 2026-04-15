@@ -62,6 +62,13 @@ const SensorData = () => {
         else setPage(1);
     };
 
+    const handleFilterKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleSearch();
+        }
+    };
+
     // Nút Reset
     const handleReset = () => {
         setFilters(defaultFilters);
@@ -162,7 +169,7 @@ const SensorData = () => {
 
             {/* --- BỘ LỌC CHUYÊN SÂU --- */}
             <div className="filter-container">
-                <div className="filter-row">
+                <div className="filter-row" onKeyDown={handleFilterKeyDown}>
                     <div className="filter-item">
                         <label>Sensor Type</label>
                         <select name="sensorType" value={filters.sensorType} onChange={handleFilterChange} className="input-field">
